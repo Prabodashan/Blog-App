@@ -45,6 +45,7 @@ exports.addPost = (req, res) => {
 
     db.query(q, [values], (err, data) => {
       if (err) return res.status(500).json(err);
+      console.log("Post has been created.");
       return res.json("Post has been created.");
     });
   });

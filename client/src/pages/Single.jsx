@@ -1,68 +1,78 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import moment from "moment";
+import DOMPurify from "dompurify";
 
 import Edit from "../img/edit.png";
 import Delete from "../img/delete.png";
 
 import Menu from "../components/Menu";
+import { AuthContext } from "./../context/authContext";
 
 const Single = () => {
+  const [post, setPost] = useState({});
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const postId = location.pathname.split("/")[2];
+
+  const { currentUser } = useContext(AuthContext);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`/posts/${postId}`);
+        setPost(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, [postId]);
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/posts/${postId}`);
+      navigate("/");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getText = (html) => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent;
+  };
+
   return (
     <div className="single">
       <div className="content">
-        <img src="" alt="" />
+        <img src={post?.img} alt="" />
         <div className="user">
-          <img src="" alt="" />
+          {post.userImg && <img src={post.userImg} alt="" />}
           <div className="info">
-            <span>John</span>
-            <p>Posted 2 days ago</p>
+            <span>{post.username}</span>
+            <p>Posted {moment(post.date).fromNow()}</p>
           </div>
-          <div className="edit">
-            <Link to={`/write?edit=2`}>
-              <img src={Edit} alt="" />
-            </Link>
-            <img src={Delete} alt="" />
-          </div>
+          {currentUser?.username === post.username && (
+            <div className="edit">
+              <Link to={`/write?edit=2`} state={post}>
+                <img src={Edit} alt="" />
+              </Link>
+              <img onClick={handleDelete} src={Delete} alt="" />
+            </div>
+          )}
         </div>
-        <h1>
-          distinctio ab, magnam libero necessitatibus cupiditate iste
-          repudiandae, ad a neque fuga molestias perspiciatis?
-        </h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Non quae
-          alias delectus, iste sequi velit iusto maiores molestias iure esse!
-          Inventore suscipit explicabo doloribus eligendi adipisci corrupti
-          quasi perspiciatis voluptatem rem reprehenderit nisi, eaque iste
-          nostrum maiores aliquam consequatur minus error eum totam obcaecati
-          quia? Unde optio, dolor, recusandae ipsa cupiditate non nobis,
-          incidunt porro temporibus velit saepe dicta consequuntur. Minima
-          delectus tempore corrupti ipsum similique dolores, dolorum molestias
-          maiores saepe corporis sint architecto ea ducimus dolorem alias
-          voluptate quibusdam officiis exercitationem, nesciunt aliquid maxime
-          molestiae ex earum? Rem doloremque pariatur illum quas minima velit
-          reprehenderit dolores nemo magni alias aspernatur sunt, non
-          repudiandae architecto officia, delectus excepturi debitis quidem,
-          numquam unde temporibus harum fugiat. Illum non eaque sit perferendis!
-          Laboriosam perspiciatis, sapiente voluptates iure minima magni
-          expedita cum cumque aperiam nam praesentium dignissimos, beatae
-          aliquam, modi nisi? Unde, voluptas. Animi earum neque fugit aliquam,
-          placeat ea adipisci at possimus vitae ratione voluptas repellat ullam
-          quidem laboriosam. Ad quasi repellendus ea doloribus, enim
-          exercitationem itaque repudiandae quidem corporis magni nisi ab odit
-          placeat aliquid dolorum distinctio recusandae vero at, praesentium
-          culpa molestias! Facilis minima nobis ipsam quae? Dignissimos
-          inventore architecto totam excepturi ipsum quos, maxime quam ad quasi
-          quod deleniti voluptas magni earum similique, pariatur illum, illo
-          saepe numquam. Vel blanditiis similique culpa temporibus officiis hic
-          labore libero sint qui iste ad aut aliquam eveniet in repellendus,
-          dolor suscipit ullam! Rerum error consequuntur sunt nisi quae,
-          eligendi sapiente accusamus mollitia. Illum nemo nihil, provident quae
-          dignissimos accusantium autem repudiandae cum!
-        </p>
+        <h1>{post.title}</h1>
+        <p
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(post.desc),
+          }}
+        ></p>
       </div>
-      <div className="menu">
-        <Menu />
-      </div>
+      <Menu cat={post.cat} />
     </div>
   );
 };

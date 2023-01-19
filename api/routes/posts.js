@@ -7,10 +7,11 @@ const {
   addPost,
   deletePost,
   updatePost,
+  getPost,
 } = require("../Controllers/post");
 
 router.get("/", getPosts);
-router.get("/:id", getPosts);
+router.get("/:id", getPost);
 router.post("/", addPost);
 router.delete("/:id", deletePost);
 router.put("/:id", updatePost);
